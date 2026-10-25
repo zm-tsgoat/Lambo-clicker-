@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambo Clicker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #101010, #252525);
+    color: white;
+    text-align: center;
+}
+
+header {
+    background: #b60000;
+    padding: 22px;
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.money {
+    font-size: 32px;
+    color: #00ff88;
+    margin-top: 25px;
+    font-weight: bold;
+}
+
+.car {
+    font-size: 100px;
+    margin: 25px 0 10px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.car:active {
+    transform: scale(0.9);
+}
+
+button {
+    background: #d60000;
+    color: white;
+    border: none;
+    padding: 14px 22px;
+    margin: 7px;
+    border-radius: 9px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff2929;
+}
+
+.panel {
+    background: #1b1b1b;
+    border: 1px solid #444;
+    border-radius: 14px;
+    padding: 18px;
+    margin: 18px auto;
+    width: 90%;
+    max-width: 420px;
+}
+
+.small {
+    color: #aaa;
+    font-size: 14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>🏎️ LAMBO CLICKER</header>
+
+<div class="money">£<span id="money">0</span></div>
+<p>Cash earned: £<span id="total">0</span></p>
+
+<div class="car" id="car" onclick="clickCar()">🏎️</div>
+<h2 id="carName">Lamborghini Huracán</h2>
+<p>Click your Lambo to earn cash!</p>
+<h3>£<span id="power">1</span> per click</h3>
+
+<div class="panel">
+    <h2>🔧 Upgrades</h2>
+    <p>Turbo boost: +£1 per click</p>
+    <p>Cost: £<span id="upgradeCost">25</span></p>
+    <button onclick="buyUpgrade()">BUY UPGRADE</button>
+    <p>Cash machine: +£1 per second</p>
+    <p>Cost: £100</p>
+    <button onclick="buyMachine()">BUY CASH MACHINE</button>
+    <p>Passive income: £<span id="passive">0</span>/sec</p>
+</div>
+
+<div class="panel">
+    <h2>🚘 Car Dealership</h2>
+    <p id="nextCar">Lamborghini Aventador — £500</p>
+    <button onclick="buyCar()">BUY NEXT LAMBO</button>
+    <p class="small">New cars boost your earnings per click!</p>
+</div>
+
+<button onclick="saveGame()">💾 SAVE GAME</button>
+<button onclick="resetGame()">RESET GAME</button>
+
+<script>
+let money = 0;
+let total = 0;
+let power = 1;
+let upgradeCost = 25;
+let passive = 0;
+let carIndex = 0;
+
+const cars = [
+    {name: "Lamborghini Huracán", cost: 0, power: 1, emoji: "🏎️"},
+    {name: "Lamborghini Aventador", cost: 500, power: 5, emoji: "🏎️"},
+    {name: "Lamborghini Urus", cost: 2500, power: 15, emoji: "🚙"},
+    {name: "Lamborghini Revuelto", cost: 10000, power: 50, emoji: "🏎️"},
+    {name: "Lamborghini Sián", cost: 50000, power: 150, emoji: "🏎️"}
+];
+
+function update() {
+    document.getElementById("money").textContent = Math.floor(money).toLocaleString();
+    document.getElementById("total").textContent = Math.floor(total).toLocaleString();
+    document.getElementById("power").textContent = power.toLocaleString();
+    document.getElementById("upgradeCost").textContent = upgradeCost.toLocaleString();
+    document.getElementById("passive").textContent = passive.toLocaleString();
+
+    let next = cars[carIndex + 1];
+    document.getElementById("nextCar").textContent =
+        next ? next.name + " — £" + next.cost.toLocaleString() : "All Lambos unlocked!";
+
+    document.getElementById("carName").textContent = cars[carIndex].name;
+    document.getElementById("car").textContent = cars[carIndex].emoji;
+}
+
+function clickCar() {
+    money += power;
+    total += power;
+    update();
+}
+
+function buyUpgrade() {
+    if (money >= upgradeCost) {
+        money -= upgradeCost;
+        power += 1;
+        upgradeCost = Math.floor(upgradeCost * 1.7);
+        update();
+    } else {
+        alert("Not enough cash!");
+    }
+}
+
+function buyMachine() {
+    if (money >= 100) {
+        money -= 100;
+        passive += 1;
+        update();
+    } else {
+        alert("You need £100!");
+    }
+}
+
+function buyCar() {
+    let next = cars[carIndex + 1];
+
+    if (!next) {
+        alert("You unlocked every Lambo!");
+        return;
+    }
+
+    if (money >= next.cost) {
+        money -= next.cost;
+        carIndex++;
+        power = Math.max(power, cars[carIndex].power);
+        update();
+    } else {
+        alert("Not enough cash!");
+    }
+}
+
+function saveGame() {
+    localStorage.setItem("lamboSave", JSON.stringify({
+        money, total, power, upgradeCost, passive, carIndex
+    }));
+    alert("Game saved!");
+}
+
+function loadGame() {
+    try {
+        let data = JSON.parse(localStorage.getItem("lamboSave"));
+        if (data && Number.isFinite(data.money) &&
+            Number.isInteger(data.carIndex) &&
+            data.carIndex >= 0 && data.carIndex < cars.length) {
+            money = Math.max(0, data.money);
+            total = Math.max(0, data.total || 0);
+            power = Math.max(1, data.power || 1);
+            upgradeCost = Math.max(25, data.upgradeCost || 25);
+            passive = Math.max(0, data.passive || 0);
+            carIndex = data.carIndex;
+        }
+    } catch (e) {}
+}
+
+function resetGame() {
+    if (confirm("Reset all your progress?")) {
+        localStorage.removeItem("lamboSave");
+        money = 0;
+        total = 0;
+        power = 1;
+        upgradeCost = 25;
+        passive = 0;
+        carIndex = 0;
+        update();
+    }
+}
+
+setInterval(() => {
+    money += passive;
+    total += passive;
+    update();
+}, 1000);
+
+loadGame();
+update();
+</script>
+
+</body>
+</html>
